@@ -31,6 +31,26 @@
 #define displayPinRS  7 // LCD RS
 #define displayPinCSB 8 // LCD CSB
 
+// Set LCD chars
+byte smiley1[8] = {
+  B00000,
+  B10001,
+  B00000,
+  B00000,
+  B10001,
+  B01110,
+  B00000,
+};
+byte smiley2[8] = {
+  B00000,
+  B10001,
+  B00000,
+  B00000,
+  B01110,
+  B10001,
+  B00000,
+};
+
 // Initialize the display
 DogLcd dspl(displayPinSI, displayPinCLK, displayPinRS, displayPinCSB);
 
@@ -38,8 +58,8 @@ DogLcd dspl(displayPinSI, displayPinCLK, displayPinRS, displayPinCSB);
 Encoder encoderButton(encoderPinSW, encoderPinA, encoderPinA);
 
 // Event timer
-uint32_t eventLastMillis = 0;
-uint32_t eventTimeoutMillis = 30000;
+uint32_t eventLastMillis    =     0; // Last event millis
+uint32_t eventTimeoutMillis = 30000; // Standby after millis
 
 /**
  * Setup
@@ -48,18 +68,26 @@ void setup() {
 	#ifdef DEBUG_MODE
 	Serial.begin(9600);
 	#endif
+	
+	// Create LCD chars
+	dspl.createChar(0, smiley1);
+	dspl.createChar(1, smiley2);
+	
+	// Set up the LCD type and the contrast setting for the display
+	dspl.begin(DOG_LCD_M163, 0x3F, DOG_LCD_VCC_5V); // DOG_LCD_M163, 0, DOG_LCD_VCC_3V3
+	dspl.clear();
 
 	// Check battery
 	if(isBatteryLow()){
 		dspl.setCursor(0, 1);
-		dspl.println("!!BATTERY LOW!!");
+		lcd.write(byte(1));
+		dspl.setCursor(15, 1);
+		lcd.write(byte(1));
+		dspl.setCursor(2, 1);
+		dspl.println("BATTERY LOW");
 		delay(3000);
 		dspl.clear();
 	}
-	
-	// Set up the LCD type and the contrast setting for the display 
-	dspl.begin(DOG_LCD_M163, 0x3F, DOG_LCD_VCC_5V); // DOG_LCD_M163, 0, DOG_LCD_VCC_3V3
-	dspl.clear();
 	
 	// Set up encoder
 	encoderButton.begin(encoderTicks, ENCODER_BTN_PULLUP); // tickkMultiply not implemented yet
@@ -181,6 +209,9 @@ void wakeUp() {
 	// wakeUpNow code will not be executed
 	// during normal running time.
 	detachInterrupt(0);
+	
+	// Set encoder position
+	encoderButton.setPosition(0);
 	
 	// Enable display
 	dspl.display();
