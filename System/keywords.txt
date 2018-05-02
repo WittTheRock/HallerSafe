@@ -1,0 +1,24 @@
+
+#######################################
+# Syntax Coloring Map For System
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+System	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+sleep	KEYWORD2
+wakeUp	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+BATTERY_PERCENTAGE	LITERAL1
+BATTERY_VOLTAGE	LITERAL1
+
