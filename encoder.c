@@ -17,9 +17,10 @@
 // Set defines
 #define DEBUG_MODE // Enable debug mode 
 
-#define batteryPin   A0 // Battery pin
-#define batteryVolt   5 // Max. battery voltage
-#define warningVolt   2 // Warning voltage
+#define batteryPin    A0 // Battery pin
+#define batteryVolt    5 // Full voltage
+#define warningVolt    2 // Warning voltage
+#define warningTime 3000 // Warning message time
 
 #define encoderPinSW  2 // Encoder SW
 #define encoderPinA   3 // Encoder A
@@ -50,6 +51,15 @@ byte smiley2[8] = {
   B10001,
   B00000,
 };
+byte heart[8] = {
+  B00000,
+  B01010,
+  B10101,
+  B10001,
+  B01010,
+  B00100,
+  B00000,
+};
 
 // Initialize the display
 DogLcd dspl(displayPinSI, displayPinCLK, displayPinRS, displayPinCSB);
@@ -72,6 +82,7 @@ void setup() {
 	// Create LCD chars
 	dspl.createChar(0, smiley1);
 	dspl.createChar(1, smiley2);
+	dspl.createChar(2, heart);
 	
 	// Set up the LCD type and the contrast setting for the display
 	dspl.begin(DOG_LCD_M163, 0x3F, DOG_LCD_VCC_5V); // DOG_LCD_M163, 0, DOG_LCD_VCC_3V3
@@ -79,13 +90,17 @@ void setup() {
 
 	// Check battery
 	if(isBatteryLow()){
+		#ifdef DEBUG_MODE
+		Serial.println("!!! BATTERY LOW !!!");
+		#endif
+		
 		dspl.setCursor(0, 1);
 		lcd.write(byte(1));
 		dspl.setCursor(15, 1);
 		lcd.write(byte(1));
 		dspl.setCursor(2, 1);
 		dspl.println("BATTERY LOW");
-		delay(3000);
+		delay(warningTime);
 		dspl.clear();
 	}
 	
