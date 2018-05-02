@@ -91,9 +91,9 @@ void standBy() {
 	sleep_enable();
 
 	attachInterrupt(0, this->systemWakeUp, HIGH); // use interrupt 0 (pin 2) and run function
-
-	/* 0, 1, or many lines of code here */
-	dspl. (pwr1, LOW);
+	
+	dspl.reset();
+	dspl.noDisplay();
 
 	// here the device is actually put to sleep!!
 	// THE PROGRAM CONTINUES FROM HERE AFTER WAKING UP
