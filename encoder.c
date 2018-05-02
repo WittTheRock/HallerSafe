@@ -14,19 +14,26 @@
 #include <Serial.h>
 #include <Encoder.h>
 
+// initialize the library with the numbers of the interface pins
+DogLcd dspl(5, 6, 7, 8);
+
+// initialize encoder with pins
 Encoder encoderButton(2, 3, 4);
 
 uint32_t eventLastMillis = 0;
 uint32_t eventTimeoutMillis = 30000;
 
-// initialize the library with the numbers of the interface pins
-DogLcd dspl(5, 6, 7, 8);
-
 void setup() {
 	// set up the LCD type and the contrast setting for the display 
 	dspl.begin(DOG_LCD_M163);
-	// Print a message to the LCD.
-	dspl.print("hello, world!");
+	dspl.clear();
+	
+	if(isBatteryLow()){
+		dspl.setCursor(0, 1);
+		dspl.println("!!LOW BATTERY!!");
+		delay(3000);
+		dspl.clear();
+	}
 	
 	Serial.begin(9600);
 	encoderButton.begin(2, ENCODER_BTN_PULLUP); // clickMultiply not available yet
@@ -36,20 +43,16 @@ void setup() {
 }
 
 void loop() {
-	// set the cursor to column 0, line 1
-	// (note: line 1 is the second row, since counting begins with 0):
 	dspl.setCursor(0, 0);
-	// print the number of seconds since reset:
 	dspl.print(millis()/1000);
 	
-	// SW:
 	if(encoderButton.update()){
 		eventLastMillis = millis();
 	}
 	
 	if(eventLastMillis + eventTimeoutMillis < millis()){
 		Serial.println('Sleep now...');
-		//standBy()
+		//standBy();
 	}
 	
 	if(encoderButton.isDown()){
@@ -78,8 +81,12 @@ void loop() {
 	lcd.print(encoderButton.getPosition());
 }
 
-void batteryCheck(uint8_t type){
+bool isBatteryLow(){
+	if(true == false){
+		return true;
+	}
 	
+	return false;
 }
 
 void standBy() {
@@ -90,7 +97,8 @@ void standBy() {
 	// so sleep is possible. just a safety pin
 	sleep_enable();
 
-	attachInterrupt(0, this->systemWakeUp, HIGH); // use interrupt 0 (pin 2) and run function
+	// use interrupt 0 (pin 2) and run function
+	attachInterrupt(0, wakeUp, LOW); 
 	
 	dspl.reset();
 	dspl.noDisplay();
@@ -110,5 +118,9 @@ void wakeUp() {
 	// during normal running time.
 	detachInterrupt(0);
 	
+	// Enable display
+	dspl.display();
+	
+	// update event millis
 	eventLastMillis = millis();
 }
