@@ -9,39 +9,68 @@
  * http://www.arduino.cc/en/Tutorial/LiquidCrystal
  */
 
-// include the library code:
-#include <DogLcd.h>
+// Include libraries
 #include <Serial.h>
-#include <Encoder.h>
+#include <DogLcd/DogLcd.h>
+#include <Encoder/Encoder.h>
 
-// initialize the library with the numbers of the interface pins
-DogLcd dspl(5, 6, 7, 8);
+// Set defines
+#define DEBUG_MODE // Enable debug mode 
 
-// initialize encoder with pins
-Encoder encoderButton(2, 3, 4);
+#define batteryPin   A0 // Battery pin
+#define batteryVolt   5 // Max. battery voltage
+#define warningVolt   2 // Warning voltage
 
+#define encoderPinSW  2 // Encoder SW
+#define encoderPinA   3 // Encoder A
+#define encoderPinB   4 // Encoder B
+#define encoderTicks  2 // Encoder ticks
+
+#define displayPinSI  5 // LCD SI
+#define displayPinCLK 6 // LCD CLK
+#define displayPinRS  7 // LCD RS
+#define displayPinCSB 8 // LCD CSB
+
+// Initialize the display
+DogLcd dspl(displayPinSI, displayPinCLK, displayPinRS, displayPinCSB);
+
+// Initialize encoder
+Encoder encoderButton(encoderPinSW, encoderPinA, encoderPinA);
+
+// Event timer
 uint32_t eventLastMillis = 0;
 uint32_t eventTimeoutMillis = 30000;
 
+/**
+ * Setup
+ */
 void setup() {
-	// set up the LCD type and the contrast setting for the display 
-	dspl.begin(DOG_LCD_M163);
-	dspl.clear();
-	
+	#ifdef DEBUG_MODE
+	Serial.begin(9600);
+	#endif
+
+	// Check battery
 	if(isBatteryLow()){
 		dspl.setCursor(0, 1);
-		dspl.println("!!LOW BATTERY!!");
+		dspl.println("!!BATTERY LOW!!");
 		delay(3000);
 		dspl.clear();
 	}
 	
-	Serial.begin(9600);
-	encoderButton.begin(2, ENCODER_BTN_PULLUP); // clickMultiply not available yet
+	// Set up the LCD type and the contrast setting for the display 
+	dspl.begin(DOG_LCD_M163, 0x3F, DOG_LCD_VCC_5V); // DOG_LCD_M163, 0, DOG_LCD_VCC_3V3
+	dspl.clear();
+	
+	// Set up encoder
+	encoderButton.begin(encoderTicks, ENCODER_BTN_PULLUP); // tickkMultiply not implemented yet
 	encoderButton.setMinMax(0, 255);
 	
 	eventLastMillis = millis();
 }
 
+/**
+ * Loop
+ */
 void loop() {
 	dspl.setCursor(0, 0);
 	dspl.print(millis()/1000);
@@ -51,18 +80,27 @@ void loop() {
 	}
 	
 	if(eventLastMillis + eventTimeoutMillis < millis()){
+		#ifdef DEBUG_MODE
 		Serial.println('Sleep now...');
+		#endif
+		
 		//standBy();
 	}
 	
 	if(encoderButton.isDown()){
+		#ifdef DEBUG_MODE
 		Serial.println("Down");
+		#endif
 	}else if(encoderButton.isPressed()){
+		#ifdef DEBUG_MODE
 		Serial.println("Pressed");
+		#endif
 	}
 	
 	if(encoderButton.getDownTime() % 15000 == 0){
+		#ifdef DEBUG_MODE
 		Serial.println("Down since 15 seconds");
+		#endif
 	}
 	
 	dspl.setCursor(0, 2);
@@ -79,17 +117,36 @@ void loop() {
 	}
 	
 	lcd.print(encoderButton.getPosition());
+	
+	#ifdef DEBUG_MODE
+	Serial.print("Position: ");
+	Serial.println(encoderButton.getPosition());
+	#endif
 }
 
+/**
+ * Is battery low
+ * http://www.instructables.com/id/Displaying-Battery-Life-on-a-Liquid-Crystal-Displa/
+ * @return bool
+ */
 bool isBatteryLow(){
-	if(true == false){
+	float currVolt = (analogRead(batteryPin)/(1023/batteryVolt));
+	
+	if(currVolt <= warningVolt){
 		return true;
 	}
 	
 	return false;
 }
 
+/**
+ * Standby
+ */
 void standBy() {
+	#ifdef DEBUG_MODE
+	Serial.println("Standby...");
+	#endif
+	
 	// sleep mode is set here
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 
@@ -108,11 +165,18 @@ void standBy() {
 	sleep_mode();
 }
 
+/**
+ * Wakeup
+ */
 void wakeUp() {
 	// first thing after waking from sleep:
 	// disable sleep...
 	sleep_disable();
-
+	
+	#ifdef DEBUG_MODE
+	Serial.println("WakeUp...");
+	#endif
+	
 	// disables interrupt 0 on pin 2 so the
 	// wakeUpNow code will not be executed
 	// during normal running time.
