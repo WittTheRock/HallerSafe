@@ -1,6 +1,7 @@
 #ifndef Encoder_h
 #define Encoder_h
 
+#include <Arduino.h>
 #include <stdio.h>
 #include <inttypes.h>
 
@@ -10,7 +11,7 @@
 #define ENCODER_BTN_NORMAL 0
 #define ENCODER_BTN_PULLUP 1
 
-class Button {
+class Encoder {
 private:
 	/** The pin where the pin A is connected */
 	uint8_t pinA = 0;
@@ -27,6 +28,8 @@ private:
 	uint32_t buttonDownStart = 0;
 	/** Last state of button */
 	uint8_t buttonLastState = LOW;
+	/** millis on button pressed long */
+	uint16_t buttonLongPress = 5000;
 
 	/** Encoder position */
 	uint8_t encoderDirection = ENCODER_DIR_NONE;
@@ -57,7 +60,7 @@ public:
 	 * @param  pullup        Is internal pullup required.
 	 * @return void
 	 */
-	void begin(uint8_t tickMultiply = 1, bool pullup = false);
+	void begin(uint8_t tickMultiply = 1, uint16_t longPress = 5000);
 
 	/**
 	 * Update button states.
@@ -108,7 +111,13 @@ public:
 	 * @return void
 	 */
 	uint8_t setPosition(uint8_t position);
-
-}
+	
+	/**
+	 * Is button long pressed
+	 * @param  reset
+	 * @return bool
+	 */
+	bool isLongPressed(bool reset = false);
+};
 
 #endif

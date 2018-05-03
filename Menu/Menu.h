@@ -1,21 +1,23 @@
 #ifndef Menu_h
 #define Menu_h
 
-#include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
 
+typedef void (* myFunctionPointer) ();
+
 class MenuItem {
 private:
-	string title = "";
-	MenuItem[255] menuItems;
-	uint8_t lastMenuIndex = 0;
+	char title[16] = "";
+	MenuItem menuItems[255];
 	uint8_t itemIndex = 0;
+	uint8_t lastMenuIndex = 0;
+	myFunctionPointer functionPointer;
 public:
-	MenuItem(string title, uint8_t index);
+	MenuItem(String title, myFunctionPointer functionPointer);
 	
-	addMenuItem(MenuItem item);
-}
+	void addMenuItem(MenuItem item);
+};
 
 class Menu {
 private:
@@ -23,10 +25,10 @@ private:
 	uint8_t chars = 16;
 	uint8_t menuIndex = 0;
 	uint8_t itemIndex = 0;
-	MenuItem[255] menuItems;
+	MenuItem menuItems[255];
 	uint8_t lastMenuIndex = 0;
 public:
 	Menu(uint8_t lines, uint8_t chars);
-	
-	addMenuItem(MenuItem item);
-}
+	void home();
+	void addMenuItem(MenuItem item);
+};

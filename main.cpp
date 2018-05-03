@@ -7,12 +7,22 @@
  * LCD Backlight pin is not used
  *
  * http://www.arduino.cc/en/Tutorial/LiquidCrystal
+ /*
+  
+/*
+ * Netbeans configuration
+ * https://github.com/jaquesclaudino/arduino-netbeans/blob/master/doc/install.pdf
  */
 
 // Include libraries
+#include <Arduino.h>
 #include <Serial.h>
-#include <DogLcd/DogLcd.h>
-#include <Encoder/Encoder.h>
+#include <avr/sleep.h>
+#include <EEPROM.h>
+
+#include "DogLcd/DogLcd.h"
+#include "Encoder/Encoder.h"
+#include "Menu/Menu.h"
 
 // Set defines
 #define DEBUG_MODE // Enable debug mode 
@@ -22,10 +32,11 @@
 #define warningVolt    2 // Warning voltage
 #define warningTime 3000 // Warning message time
 
-#define encoderPinSW  2 // Encoder SW
-#define encoderPinA   3 // Encoder A
-#define encoderPinB   4 // Encoder B
-#define encoderTicks  2 // Encoder ticks
+#define encoderPinSW         2 // Encoder SW
+#define encoderPinA          4 // Encoder A
+#define encoderPinB          3 // Encoder B
+#define encoderTicks         2 // Encoder ticks
+#define encoderLongPress  3000 // Encoder SW long press
 
 #define displayPinSI  5 // LCD SI
 #define displayPinCLK 6 // LCD CLK
@@ -71,6 +82,8 @@ Encoder encoderButton(encoderPinSW, encoderPinA, encoderPinA);
 uint32_t eventLastMillis    =     0; // Last event millis
 uint32_t eventTimeoutMillis = 30000; // Standby after millis
 
+Menu mainMenu();
+
 /**
  * Setup
  */
@@ -95,9 +108,9 @@ void setup() {
 		#endif
 		
 		dspl.setCursor(0, 1);
-		lcd.write(byte(1));
+		dspl.write(byte(1));
 		dspl.setCursor(15, 1);
-		lcd.write(byte(1));
+		dspl.write(byte(1));
 		dspl.setCursor(2, 1);
 		dspl.println("BATTERY LOW");
 		delay(warningTime);
@@ -105,8 +118,14 @@ void setup() {
 	}
 	
 	// Set up encoder
-	encoderButton.begin(encoderTicks, ENCODER_BTN_PULLUP); // tickkMultiply not implemented yet
+	encoderButton.begin(encoderTicks, encoderLongPress); // tickMultiply not implemented yet
 	encoderButton.setMinMax(0, 255);
+	
+	// Set menu
+	MenuItem setting("Setting", null);
+	setting.addMenuItem(new MenuItem("Master password", null));
+	setting.addMenuItem(new MenuItem("Battery", null));
+	mainMenu.addMenuItem(setting);
 	
 	eventLastMillis = millis();
 }
@@ -140,9 +159,11 @@ void loop() {
 		#endif
 	}
 	
-	if(encoderButton.getDownTime() % 15000 == 0){
+	if(encoderButton.isLongPressed()){
 		#ifdef DEBUG_MODE
-		Serial.println("Down since 15 seconds");
+		Serial.print("Down since ");
+		Serial.print(encoderLongPress/1000);
+		Serial.println(" seconds");
 		#endif
 	}
 	
@@ -159,7 +180,7 @@ void loop() {
 			break;
 	}
 	
-	lcd.print(encoderButton.getPosition());
+	dspl.print(encoderButton.getPosition());
 	
 	#ifdef DEBUG_MODE
 	Serial.print("Position: ");
@@ -224,6 +245,13 @@ void wakeUp() {
 	// wakeUpNow code will not be executed
 	// during normal running time.
 	detachInterrupt(0);
+	
+	while(digitalRead(encoderPinSW) == HIGH){
+		delay(10);
+	}
+	
+	// Menu home 
+	mainMenu.home();
 	
 	// Set encoder position
 	encoderButton.setPosition(0);

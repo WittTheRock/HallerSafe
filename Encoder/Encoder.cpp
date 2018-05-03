@@ -1,13 +1,10 @@
 #include "Encoder.h"
 
+#include <Arduino.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <pins_arduino.h>
 
-#if defined(ARDUINO) && (ARDUINO >= 100)
-#include <Arduino.h>
-#else
-#include <WProgram.h>
-#endif
 
 Encoder::Encoder(uint8_t pinA, uint8_t pinB, uint8_t pinSW) {
 	this->pinA = pinA;
@@ -15,27 +12,21 @@ Encoder::Encoder(uint8_t pinA, uint8_t pinB, uint8_t pinSW) {
 	this->pinSW = pinSW;
 }
 
-void Encoder::begin(uint8_t tickMultiply, bool pullup) {
-	this->pullup = pullup;
-	this->buttonLastState = this->pullup ? HIGH : LOW;
+void Encoder::begin(uint8_t tickMultiply, uint16_t longPress) {
+	this->buttonLastState = LOW;
 
 	this->tickMultiply = tickMultiply;
+	this->buttonLongPress = longPress;
 
 	pinMode(this->pinA, INPUT);
 	pinMode(this->pinB, INPUT);
-
-	if (this->pullup) {
-		pinMode(this->pinSW, INPUT);
-	} else {
-		pinMode(this->pinSW, INPUT_PULLUP);
-	}
+	pinMode(this->pinSW, INPUT);
 }
 
 bool Encoder::update() {
 	bool hasUpdate = false;
 
 	// Check button
-	uint8_t buttonCheckState = this->pullup ? HIGH : LOW;
 	uint8_t buttonCurrState = digitalRead(this->pinSW);
 
 	if (this->isPressed()) {
@@ -43,7 +34,7 @@ bool Encoder::update() {
 	}
 
 	if (buttonCurrState != this->buttonLastState) {
-		if (buttonCurrState == buttonCheckState) {
+		if (buttonCurrState == HIGH) {
 			this->buttonDown = true;
 			this->buttonPressed = false;
 			this->buttonDownStart = millis();
@@ -70,21 +61,19 @@ bool Encoder::update() {
 				this->encoderDirection = ENCODER_DIR_CLOCKWISE;
 			}
 		}
+		hasUpdate = true;
 	} else {
 		if (this->positionCurr < this->positionMax) {
 			this->positionCurr++;
 			this->encoderDirection = ENCODER_DIR_COUNTERCLOCK;
 		}
+		hasUpdate = true;
 	}
-}
 
-hasUpdate = true;
-}
+	this->encoderLastState = encoderCurrState;
 
-this->encoderLastState = encoderCurrState;
-
-// Return update status
-return hasUpdate;
+	// Return update status
+	return hasUpdate;
 }
 
 void Encoder::setMinMax(uint8_t min, uint8_t max) {
@@ -114,4 +103,15 @@ uint8_t Encoder::getPosition() {
 
 void Encoder::setPosition(uint8_t position) {
 	this->positionCurr = position;
+}
+
+bool isLongPressed(bool reset){
+	if(this->buttonDownStart + this->buttonLongPress < millis()){
+		if(reset){
+			this->buttonDownStart = millis();
+		}
+		return true;
+	}
+	
+	return false;
 }
