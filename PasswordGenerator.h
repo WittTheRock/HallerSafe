@@ -15,7 +15,16 @@ public:
 	void EnableNumbers(bool enabled);
 
 	string GeneratePassword(int length) const;
+	string GenerateFriendlyPassword(int length) const;
 	string GeneratePIN(int length) const;
+
+private:
+	char GenerateArbitraryLetter() const;
+	char GenerateChar(char start, char end) const;
+	string Knead(const string& pwd) const;
+	bool IsAppropriateLetter(char ch, const string& pwd) const;
+	bool IsConsonant(char ch) const;
+	bool IsVowel(char ch) const;
 
 private:
 	bool lowerCaseCharactersEnabled;
@@ -23,4 +32,3 @@ private:
 	bool specialCharactersEnabled;
 	bool numbersEnabled;
 };
-

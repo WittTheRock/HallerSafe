@@ -1,13 +1,11 @@
 #include "stdafx.h"
 #include "PasswordGenerator.h"
+#include <random>
 #include <ctime>
 
-const char LOWERCASE_CHARACTERS[] = "abcdefghijklmnopqrstuvwxyz";
-const char UPPERCASE_CHARACTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const char SPECIAL_CHARACTERS[] = "!#$&+?@";
-const char NUMBERS[] = "1234567890";
-const int NUMBER_OF_LOWERCASES = sizeof(LOWERCASE_CHARACTERS) / sizeof(LOWERCASE_CHARACTERS[0]);
-const int NUMBER_OF_UPPERCASES = sizeof(UPPERCASE_CHARACTERS) / sizeof(UPPERCASE_CHARACTERS[0]);
+
+const char SPECIAL_CHARACTERS[] = "!#$&+?@_-=~";
+const int NUMBER_OF_SPECIAL = sizeof(SPECIAL_CHARACTERS) / sizeof(SPECIAL_CHARACTERS[0]) - 1;
 
 PasswordGenerator::PasswordGenerator()
 	: lowerCaseCharactersEnabled(true)
@@ -15,7 +13,7 @@ PasswordGenerator::PasswordGenerator()
 	, specialCharactersEnabled(true)
 	, numbersEnabled(true)
 {
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 }
 PasswordGenerator::~PasswordGenerator()
 {
@@ -53,28 +51,31 @@ string PasswordGenerator::GeneratePassword(int length) const
 		{
 		case 0:
 			if (this->numbersEnabled)
-				result += NUMBERS[rand() % 10];
+				result += this->GenerateChar('0', '9');
 			else
 				index--;
 
 			break;
 		case 1:
 			if (this->lowerCaseCharactersEnabled)
-				result += LOWERCASE_CHARACTERS[rand() % NUMBER_OF_LOWERCASES];
+				result += this->GenerateChar('a', 'z');
 			else
 				index--;
 
 			break;
 		case 2:
 			if (this->upperCaseCharactersEnabled)
-				result += UPPERCASE_CHARACTERS[rand() % NUMBER_OF_UPPERCASES];
+				result += this->GenerateChar('A', 'Z');
 			else
 				index--;
 
 			break;
 		case 3:
 			if (this->specialCharactersEnabled)
-				result += SPECIAL_CHARACTERS[rand() % 7];
+			{
+				const int index = rand() % NUMBER_OF_SPECIAL;
+				result += SPECIAL_CHARACTERS[index];
+			}
 			else
 				index--;
 
@@ -86,13 +87,78 @@ string PasswordGenerator::GeneratePassword(int length) const
 
 	return result;
 }
+string PasswordGenerator::GenerateFriendlyPassword(int length) const
+{
+	string result;
+
+	while (result.length() < (size_t)length)
+	{
+		char ch = this->GenerateArbitraryLetter();
+
+		if (this->IsAppropriateLetter(ch, result))
+			result += ch;
+	}
+
+	return this->Knead(result);
+}
+char PasswordGenerator::GenerateArbitraryLetter() const
+{
+	if (rand() % 2 == 0)
+		return this->GenerateChar('a', 'z');
+
+	return this->GenerateChar('A', 'Z');
+}
+string PasswordGenerator::Knead(const string& pwd) const
+{
+	string result;
+
+	int doIt = 4;
+	for (size_t index = 0; index < pwd.length(); index++)
+	{
+		char ch = pwd.at(index);
+
+		if (index == 0 || (doIt >= 4 && this->IsConsonant(ch)))
+		{
+			result += toupper(ch);
+			doIt = 0;
+		}
+		else
+			result += tolower(ch);
+
+		doIt++;
+	}
+
+	return result;
+}
+bool PasswordGenerator::IsAppropriateLetter(char ch, const string& pwd) const
+{
+	if (pwd.length() <= 0)
+		return true;
+
+	const char lastChar = pwd.at(pwd.length() - 1);
+	if (!this->IsConsonant(lastChar))
+		return true;
+
+	if (!this->IsConsonant(ch))
+		return true;
+
+	return false;
+}
+bool PasswordGenerator::IsConsonant(char ch) const
+{
+	return !this->IsVowel(ch);
+}
+bool PasswordGenerator::IsVowel(char ch) const
+{
+	return (strchr("AEIOUaeiou", ch) != nullptr);
+}
 
 string PasswordGenerator::GeneratePIN(int length) const
 {
 	string result;
 	for (int index = 0; index < length; index++)
 	{
-		result += NUMBERS[rand() % 10];
+		result += this->GenerateChar('0', '9');
 	}
 
 	return result;
@@ -104,3 +170,4 @@ char PasswordGenerator::GenerateChar(char start, char end) const
 	char number = (char)(rand() % size);
 	return start + number;
 }
+
