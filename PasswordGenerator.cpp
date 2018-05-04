@@ -6,6 +6,8 @@ const char LOWERCASE_CHARACTERS[] = "abcdefghijklmnopqrstuvwxyz";
 const char UPPERCASE_CHARACTERS[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const char SPECIAL_CHARACTERS[] = "!#$&+?@";
 const char NUMBERS[] = "1234567890";
+const int NUMBER_OF_LOWERCASES = sizeof(LOWERCASE_CHARACTERS) / sizeof(LOWERCASE_CHARACTERS[0]);
+const int NUMBER_OF_UPPERCASES = sizeof(UPPERCASE_CHARACTERS) / sizeof(UPPERCASE_CHARACTERS[0]);
 
 PasswordGenerator::PasswordGenerator()
 	: lowerCaseCharactersEnabled(true)
@@ -58,14 +60,14 @@ string PasswordGenerator::GeneratePassword(int length) const
 			break;
 		case 1:
 			if (this->lowerCaseCharactersEnabled)
-				result += LOWERCASE_CHARACTERS[rand() % 26];
+				result += LOWERCASE_CHARACTERS[rand() % NUMBER_OF_LOWERCASES];
 			else
 				index--;
 
 			break;
 		case 2:
 			if (this->upperCaseCharactersEnabled)
-				result += UPPERCASE_CHARACTERS[rand() % 26];
+				result += UPPERCASE_CHARACTERS[rand() % NUMBER_OF_UPPERCASES];
 			else
 				index--;
 
@@ -96,3 +98,9 @@ string PasswordGenerator::GeneratePIN(int length) const
 	return result;
 }
 
+char PasswordGenerator::GenerateChar(char start, char end) const
+{
+	char size = end - start + 1;
+	char number = (char)(rand() % size);
+	return start + number;
+}
