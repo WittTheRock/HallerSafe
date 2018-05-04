@@ -3,6 +3,7 @@
 #include <random>
 #include <ctime>
 
+using namespace std;
 
 const char SPECIAL_CHARACTERS[] = "!#$&+?@_-=~";
 const int NUMBER_OF_SPECIAL = sizeof(SPECIAL_CHARACTERS) / sizeof(SPECIAL_CHARACTERS[0]) - 1;

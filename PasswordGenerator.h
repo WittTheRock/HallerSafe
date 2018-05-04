@@ -1,8 +1,6 @@
 #pragma once
 #include <string>
 
-using namespace std;
-
 class PasswordGenerator
 {
 public:
@@ -14,15 +12,15 @@ public:
 	void EnableSpecialCharacters(bool enabled);
 	void EnableNumbers(bool enabled);
 
-	string GeneratePassword(int length) const;
-	string GenerateFriendlyPassword(int length) const;
-	string GeneratePIN(int length) const;
+	std::string GeneratePassword(int length) const;
+	std::string GenerateFriendlyPassword(int length) const;
+	std::string GeneratePIN(int length) const;
 
 private:
 	char GenerateArbitraryLetter() const;
 	char GenerateChar(char start, char end) const;
-	string Knead(const string& pwd) const;
-	bool IsAppropriateLetter(char ch, const string& pwd) const;
+	std::string Knead(const std::string& pwd) const;
+	bool IsAppropriateLetter(char ch, const std::string& pwd) const;
 	bool IsConsonant(char ch) const;
 	bool IsVowel(char ch) const;
 
